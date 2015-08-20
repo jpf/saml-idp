@@ -20,7 +20,7 @@ var express             = require('express'),
 
 var argv = require('yargs')
     .usage('Simple IdP\nUsage: $0')
-    .example('$0 --acs http://acme.okta.com/auth/saml20/exampleidp --aud https://www.okta.com/saml2/service-provider/spf5aFRRXFGIMAYXQPNV', 
+    .example('$0 --acs http://acme.okta.com/auth/saml20/exampleidp --aud https://www.okta.com/saml2/service-provider/spf5aFRRXFGIMAYXQPNV',
         '\n\nStart IdP web server minting SAML assertions for service provider ACS URL and audience')
     .default({ p: 7000, iss: 'urn:example:idp'})
     .alias('p', 'port')
@@ -53,20 +53,17 @@ var idpOptions = {
   cert:                 fs.readFileSync(path.join(__dirname, 'server-cert.pem')),
   key:                  fs.readFileSync(path.join(__dirname, 'server-key.pem')),
   audience:             argv.audience,
-  recipient:            argv.acs, 
+  recipient:            argv.acs,
   destination:          argv.acs,
-  digestAlgorithm:      'sha1',      
+  digestAlgorithm:      'sha1',
   signatureAlgorithm:   'rsa-sha1',
   RelayState:           argv.relaystate,
   profileMapper:        SimpleProfileMapper,
   getUserFromRequest:   function(req) { return req.user; },
-  getPostURL:           function (audience, authnRequestDom, req, callback) { 
+  getPostURL:           function (audience, authnRequestDom, req, callback) {
                           return callback(null, argv.acs);
                         }
 }
-// idp handler
-var idpHandler = samlp.auth(idpOptions);
-
 // globals
 var app    = express();
 var server = http.createServer(app);
@@ -112,6 +109,7 @@ app.post(['/', '/idp'], function(req, res) {
     req.user.firstName = req.body.firstName;
     req.user.lastName = req.body.lastName;
     req.user.email = req.body.email;
+    var idpHandler = samlp.auth(idpOptions);
     idpHandler(req, res);
   }
 });
@@ -140,10 +138,10 @@ console.log('starting server...');
 server.listen(app.get('port'), function() {
   var address  = server.address(),
       hostname = os.hostname();
-      baseUrl  = address.address === '0.0.0.0' ? 
+      baseUrl  = address.address === '0.0.0.0' ?
         'http://' + hostname + ':' + address.port :
         'http://localhost:' + address.port
-  
+
   console.log('listening on port: ' + app.get('port'));
   console.log();
   console.log('urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST');
